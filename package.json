@@ -1,0 +1,25 @@
+{
+  "name": "smartwallet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "start.js",
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/a2steve/smartwallet.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/a2steve/smartwallet/issues"
+  },
+  "homepage": "https://gitlab.com/a2steve/smartwallet#readme",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^3.2.0",
+    "@truffle/hdwallet-provider": "^1.1.1",
+    "mocha": "^8.2.1",
+    "truffle": "^5.1.51"
+  }
+}
