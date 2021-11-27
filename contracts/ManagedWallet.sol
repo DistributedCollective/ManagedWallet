@@ -59,7 +59,8 @@ contract ManagedWallet is Ownable {
      * @notice allows the admin wallet to transfer funds to the token bridge
      * @param bridge bridge address
      * @param receiver the receiver of the funds
-     * @param extraData arbitrary extraData to send with the reuqest
+     * @param amount RBTC amount to transfer
+     * @param extraData arbitrary byte data to send with the request (used f.ex. with the aggregator)
      * */
     function transferToBridge(
         address payable bridge,
