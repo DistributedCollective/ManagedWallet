@@ -48,14 +48,19 @@ module.exports = {
     mainnet: {
       provider: () => new HDWalletProvider(mnemonic, 'https://public-node.rsk.co', 0, 1, true, "m/44'/137'/0'/0/"),
       network_id: 30,
-      gasPrice: 60000000,
+      gasPrice: 65000000,
       networkCheckTimeout: 1e9
     },
     testnet: {
-      provider: () => new HDWalletProvider(mnemonic, 'https://public-node.testnet.rsk.co', 0, 10, true, "m/44'/37310'/0'/0/"),
+      //provider: () => new HDWalletProvider(mnemonic, 'https://public-node.testnet.rsk.co', 0, 10, true, "m/44'/37310'/0'/0/"),
+      provider: () => new HDWalletProvider({
+        privateKeys: [process.env.TEST_ACCOUNT_PRIVATE_KEY],
+        providerOrUrl: 'https://testnet.sovryn.app/rpc',
+      }),
       network_id: 31,
-      gasPrice: 60000000,
-      networkCheckTimeout: 1e9
+      gasPrice: 75000000,
+      networkCheckTimeout: 1e9,
+      deploymentPollingInterval: 15 * 1000,
     }
   },
   compilers: {

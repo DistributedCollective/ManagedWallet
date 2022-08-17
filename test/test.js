@@ -1,4 +1,5 @@
 const ManagedWallet = artifacts.require('ManagedWallet');
+const TestBridge = artifacts.require('TestBridge');
 const BN = web3.utils.BN;
 let instance;
 
@@ -95,5 +96,39 @@ contract("ManagedWallet Tests", async ([owner, admin, acc1]) => {
     const expected = new BN(bal0).add(new BN(amount)).sub(gasPrice.mul(new BN(res.receipt.gasUsed)));
 
     assert(expected.eq(new BN(bal1)));
+  })
+
+  describe('bridge integration', () => {
+    let tokenBridge;
+    before(async () => {
+      // The other tests depend on each other... try to remedy
+      tokenBridge = await TestBridge.new();
+       // since this is deployed by migrations, we might have the wrong admin here
+      await instance.changeAdmin(admin, {from: await instance.owner()});
+
+      // Transfer enough for these tests to pass
+      const amount = web3.utils.toWei("0.2", "ether");
+      await instance.send(amount, {from: owner});
+    });
+
+    it("Admin should transfer 0.1 RBTC to bridge for acc1", async () => {
+      const bal0 = await web3.eth.getBalance(tokenBridge.address);
+      const amount = web3.utils.toWei('0.1', 'ether');
+      await instance.transferToBridge(tokenBridge.address, acc1, amount, '0x', {from: admin});
+      const bal1 = await web3.eth.getBalance(tokenBridge.address);
+      assert(new BN(bal0).add(new BN(amount)).eq(new BN(bal1)));
+    });
+
+    it("Non-admin should fail to transfer to bridge", async() => {
+      const amount = web3.utils.toWei('0.1', 'ether');
+      let failed = false;
+      try{
+        await instance.withdrawAdmin(acc1, amount, {from: acc1});
+      }
+      catch(e){
+        failed = true;
+      }
+      assert(failed);
+    });
   })
 });

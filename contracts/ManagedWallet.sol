@@ -5,6 +5,7 @@
 pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IBridge.sol";
 
 contract ManagedWallet is Ownable {
 
@@ -52,5 +53,21 @@ contract ManagedWallet is Ownable {
     function withdrawAdmin(address payable receiver, uint256 amount) external onlyAdmin {
         (bool success,) = receiver.call{value:amount}(new bytes(0));
         require(success, "Withdraw failed");
+    }
+
+    /**
+     * @notice allows the admin wallet to transfer funds to the token bridge
+     * @param bridge bridge address
+     * @param receiver the receiver of the funds
+     * @param amount RBTC amount to transfer
+     * @param extraData arbitrary byte data to send with the request (used f.ex. with the aggregator)
+     * */
+    function transferToBridge(
+        address payable bridge,
+        address receiver,
+        uint256 amount,
+        bytes calldata extraData
+    ) external onlyAdmin {
+        IBridge(bridge).receiveEthAt{value: amount}(receiver, extraData);
     }
 }
