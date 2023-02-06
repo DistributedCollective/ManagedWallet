@@ -8,6 +8,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IBridge.sol";
 
 contract ManagedWallet is Ownable {
+    event NewBitcoinTransferIncoming(
+        address indexed rskAddress, // user’s rsk address where the funds are sent to
+        uint256 amountWei,
+        uint256 feeWei,
+        bytes32 btcTxHash, // bitcoin deposit tx hash
+        uint256 btcTxVout // bitcoin deposit tx vout
+    );
 
     address public admin;
 
@@ -69,5 +76,18 @@ contract ManagedWallet is Ownable {
         bytes calldata extraData
     ) external onlyAdmin {
         IBridge(bridge).receiveEthAt{value: amount}(receiver, extraData);
+    }
+
+    // TODO: write the docs
+    function transferToUser(
+        address payable receiver,
+        uint256 amount,
+        uint256 fee,
+        bytes32 btcTxHash,
+        uint256 btcTxVout
+    ) external onlyAdmin {
+        (bool success,) = receiver.call{value:amount}(new bytes(0));
+        require(success, "Withdraw failed");
+        emit NewBitcoinTransferIncoming(receiver, amount, fee, btcTxHash, btcTxVout);
     }
 }
