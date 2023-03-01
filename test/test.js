@@ -131,4 +131,49 @@ contract("ManagedWallet Tests", async ([owner, admin, acc1]) => {
       assert(failed);
     });
   })
+
+  describe('transferToUser', () => {
+    const fee = new BN('123');
+    const btcTxHash = '0x' + 'a'.repeat(64);
+    const btcTxVout = new BN('2');
+
+    before(async () => {
+      // since this is deployed by migrations, we might have the wrong admin here
+      await instance.changeAdmin(admin, {from: await instance.owner()});
+
+      // Transfer enough for these tests to pass
+      const amount = web3.utils.toWei("0.2", "ether");
+      await instance.send(amount, {from: owner});
+    });
+
+    it("Admin should transfer 0.1 RBTC to acc1 with the correct event", async () => {
+      const bal0 = await web3.eth.getBalance(acc1);
+      const amount = web3.utils.toWei('0.1', 'ether');
+      const receipt = await instance.transferToUser(acc1, amount, fee, btcTxHash, btcTxVout, {from: admin});
+      const bal1 = await web3.eth.getBalance(acc1);
+      assert(new BN(bal0).add(new BN(amount)).eq(new BN(bal1)));
+
+      assert(receipt.logs.length === 1);
+      assert(receipt.logs[0].event === 'NewBitcoinTransferIncoming');
+
+      const args = receipt.logs[0].args;
+      assert(args.rskAddress === acc1);
+      assert(args.amountWei.eq(new BN(amount)));
+      assert(args.feeWei.eq(fee));
+      assert(args.btcTxHash === btcTxHash);
+      assert(args.btcTxVout.eq(btcTxVout));
+    });
+
+    it("Non-admin should fail to transfer", async() => {
+      const amount = web3.utils.toWei('0.1', 'ether');
+      let failed = false;
+      try{
+        await instance.transferToUser(acc1, amount, fee, btcTxHash, btcTxVout, {from: acc1});
+      }
+      catch(e){
+        failed = true;
+      }
+      assert(failed);
+    });
+  })
 });

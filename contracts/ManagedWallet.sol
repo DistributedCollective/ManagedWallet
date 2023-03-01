@@ -8,6 +8,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IBridge.sol";
 
 contract ManagedWallet is Ownable {
+    event NewBitcoinTransferIncoming(
+        address indexed rskAddress,
+        uint256 amountWei,
+        uint256 feeWei,
+        bytes32 btcTxHash,
+        uint256 btcTxVout
+    );
 
     address public admin;
 
@@ -69,5 +76,25 @@ contract ManagedWallet is Ownable {
         bytes calldata extraData
     ) external onlyAdmin {
         IBridge(bridge).receiveEthAt{value: amount}(receiver, extraData);
+    }
+
+    /**
+     * @notice allows the admin wallet to transfer funds to a user, emitting an event with transaction data
+     * @param receiver the receiver of the funds
+     * @param amount RBTC amount to transfer (fees are subtracted)
+     * @param fee the RBTC amount of fees paid for the transaction (only used for the event)
+     * @param btcTxHash hash of the bitcoin tx corresponding to the deposit
+     * @param btcTxVout vout for the bitcoin tx corresponding to the deposit
+     * */
+    function transferToUser(
+        address payable receiver,
+        uint256 amount,
+        uint256 fee,
+        bytes32 btcTxHash,
+        uint256 btcTxVout
+    ) external onlyAdmin {
+        (bool success,) = receiver.call{value:amount}(new bytes(0));
+        require(success, "Withdraw failed");
+        emit NewBitcoinTransferIncoming(receiver, amount, fee, btcTxHash, btcTxVout);
     }
 }
